@@ -6,6 +6,7 @@
 	space: .asciiz " "
 	board: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0
 .text
+
 main:
 	la	$a0, prompt_mode
 	jal	fun_get_int
