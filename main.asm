@@ -9,7 +9,7 @@
 main:
 	la	$a0, prompt_mode
 	jal	fun_get_int
-	move	$s0, v0		# save playing mode.
+	move	$s0, $v0	# save playing mode.
 	la	$v0, 10		# exit
 	syscall
 
