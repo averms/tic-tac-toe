@@ -6,14 +6,13 @@
 	space: .asciiz " "
 	newline: .asciiz "\n"
 	board: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0
+
 .text
 main:
 	la	$a0, prompt_mode
 	jal	fun_get_int
 	move	$s0, $v0	# save playing mode
-	
 	jal fun_display_board	
-	
 	la	$v0, 10		# exit
 	syscall
 
