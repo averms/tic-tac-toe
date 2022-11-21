@@ -5,5 +5,6 @@ Assembler and Runtime Simulator.
 
 ## Development
 
-- Follow the style guide at <https://cs233.github.io/mipsstyle.html>.
+- Add a two newlines between labels if they are part of different functions.
 - Every commit should go through code review.
+- Follow <https://cs233.github.io/mipsstyle.html>.
