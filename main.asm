@@ -2,53 +2,48 @@
 	prompt_mode: .asciiz "Play vs. 1=CPU or 2=User: "
 	prompt_row: .asciiz "Row (1-3): "
 	prompt_col: .asciiz "Col (1-3): "
-	underscore: .asciiz "_"
-	space: .asciiz " "
-	newline: .asciiz "\n"
+	underscore: .ascii "_"
+	space: .ascii " "
+	line_feed: .ascii "\n"
 	board: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+.eqv BOARD_ROW_SIZE 3
+.eqv BOARD_SIZE 9
 
 .text
 main:
 	la	$a0, prompt_mode
-	jal	fun_get_int	# Prompt user for mode
+	jal	get_int		# Prompt user for mode.
 	move	$s0, $v0
-	jal	fun_display_board
+	jal	display_board
 	la	$v0, 10
-	syscall			# Quit
+	syscall			# Quit.
 
-fun_get_int:			# $a0 is the prompt, $v0 is the read integer.
+
+get_int:			# (addr of prompt) -> (read integer)
 	li	$v0, 4
 	syscall
 	li	$v0, 5
 	syscall
 	jr	$ra
 
-fun_display_board:
-	addi	$sp, $sp, -8
-	sw	$ra, 0($sp)
 
-	addi	$t0, $t0, 0	# curr index
-	la	$t1, board	# board address
-
-loop_board:
-	add	$t1, $t1, $t0
-	lb	$a0, 0($t1)
+display_board:			# () -> ()
+	li	$t0, 0
+db_for:
+	bge	$t0, BOARD_SIZE, db_end
+	lbu	$a0, board($t0)
 	li	$v0, 1
 	syscall
-
-	add	$t2, $t0, 1
-	rem	$t2, $t2, 3
-
-	bne	$t2, 0, skip_newline
-	la	$a0, newline
-	li	$v0, 4
+	add	$t1, $t0, 1
+	rem	$t1, $t1, BOARD_ROW_SIZE
+	# Print line feed every row, when ($t0 + 1) mod 3 == 0.
+	bne	$t1, 0, db_for_next
+	lbu	$a0, line_feed
+	li	$v0, 11
 	syscall
-
-skip_newline:
+db_for_next:
 	addi	$t0, $t0, 1
-	bge	$t0, 9, exit_loop
-	j	loop_board
-
-exit_loop:
-	lw	$ra, 0($sp)
+	j	db_for
+db_end:
 	jr	$ra
