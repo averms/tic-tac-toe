@@ -10,11 +10,11 @@
 .text
 main:
 	la	$a0, prompt_mode
-	jal	fun_get_int
-	move	$s0, $v0	# save playing mode
-	jal fun_display_board	
-	la	$v0, 10		# exit
-	syscall
+	jal	fun_get_int	# Prompt user for mode
+	move	$s0, $v0
+	jal	fun_display_board
+	la	$v0, 10
+	syscall			# Quit
 
 fun_get_int:			# $a0 is the prompt, $v0 is the read integer.
 	li	$v0, 4
@@ -27,31 +27,28 @@ fun_display_board:
 	addi	$sp, $sp, -8
 	sw	$ra, 0($sp)
 
-	addi 	$t0, $t0, 0 # curr index
-	la 	$t1, board # board address
-	
-	loop_board:
-		add 	$t1, $t1, $t0
-		lb  	$a0, 0($t1)
-		li 	$v0, 1
-		syscall
-		
-		add 	$t2, $t0, 1
-		rem 	$t2, $t2, 3
-		
-		bne 	$t2, 0, skip_newline
-		la 	$a0, newline
-		li 	$v0, 4
-		syscall
-		
-	skip_newline:
-		addi 	$t0, $t0, 1
-		bge 	$t0, 9, exit_loop
-		j 	loop_board
-	
-	exit_loop:
-		lw 	$ra, 0($sp)
-		jr 	$ra
-		
-	
-	
+	addi	$t0, $t0, 0	# curr index
+	la	$t1, board	# board address
+
+loop_board:
+	add	$t1, $t1, $t0
+	lb	$a0, 0($t1)
+	li	$v0, 1
+	syscall
+
+	add	$t2, $t0, 1
+	rem	$t2, $t2, 3
+
+	bne	$t2, 0, skip_newline
+	la	$a0, newline
+	li	$v0, 4
+	syscall
+
+skip_newline:
+	addi	$t0, $t0, 1
+	bge	$t0, 9, exit_loop
+	j	loop_board
+
+exit_loop:
+	lw	$ra, 0($sp)
+	jr	$ra
