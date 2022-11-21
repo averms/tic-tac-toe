@@ -1,10 +1,14 @@
 .data
 	prompt_mode: .asciiz "Play vs. 1=CPU or 2=User: "
-	prompt_row: .asciiz "Row (1-3): "
-	prompt_col: .asciiz "Col (1-3): "
+	prompt_row: .asciiz "Row (1-3) from top: "
+	prompt_col: .asciiz "Col (1-3) from left: "
 	underscore: .ascii "_"
 	space: .ascii " "
 	line_feed: .ascii "\n"
+	# Each spot is
+	#     0 = empty
+	#     1 = user
+	#     2 = cpu
 	board: .byte 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 .eqv BOARD_ROW_SIZE 3
