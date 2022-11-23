@@ -3,8 +3,11 @@
     prompt_row:     .asciiz "Row (1-3): "
     prompt_col:     .asciiz "Col (1-3): "
     prompt_redo:    .asciiz "WARNING: Square not empty\n"
+    cong_player1:   .asciiz "Congrats player 1! You are the winner!\n"
+    cong_player2:   .asciiz "Congrats player 2! You are the winner!\n"
+    cong_cpu:       .asciiz "Oops! Looks like you lost, try again!\n"
     underscore:     .asciiz "_"
-    space: 	        .asciiz " "
+    space:          .asciiz " "
     newline:        .asciiz "\n"
     player1:        .byte 1
     player2:        .byte 2
@@ -15,7 +18,7 @@
 fun_init:
     li 	$s0, 0 # reset playing mode
     li 	$s1, 0 # reset game result
-    
+
     # reset game board
     la      $t0, board
     li      $t1, 0
@@ -43,6 +46,7 @@ fun_main:
             jal     fun_display_board
 
             # TODO CHECK IF GAME DONE !!!!!!!!!!!!
+
             bne     $s1, $zero, finish_game # game is done
             beq     $s0, 1, cpu_move
             j       user2_move
@@ -56,15 +60,36 @@ fun_main:
             jal     fun_display_board
 
             # TODO CHECK IF GAME DONE !!!!!!!!!!!!
+
             bne     $s1, $zero, finish_game # game is done
             j       user1_move
 
         cpu_move:
-            # TODO GENERATE CPU MOVE
+            jal     fun_get_cpu_move
+            la      $t0, player2
+            lb      $t0, 0($t0)
+            sb      $t0, 0($a3) # fill square
 
+            jal     fun_display_board
 
-    finish_game:
-        # TODO PRINT GAME RESULT
+            # TODO CHECK IF GAME DONE !!!!!!!
+
+            bne     $s1, $zero, finish_game # game is done
+            j       user1_move
+
+    finish_game:    # TODO NEEDS TESTING
+        beq     $s1, 2, print_player2
+        la      $a0, cong_player1
+
+        print_player2:
+            beq     $s0, 2, congrat_player2
+            la      $a0, cong_cpu
+
+            congrat_player2:
+                la      $a0, cong_player2
+
+        li      $v0, 4
+        syscall
 
     j fun_init # restart game?
     #la	$v0, 10
@@ -108,6 +133,27 @@ fun_get_user_input:
 
 
 
+fun_get_cpu_move:
+    addi    $sp, $sp, -4
+    sw      $ra, 0($sp)
+
+    gen_index:
+        jal     get_rand_int
+        move    $a1, $a0 # get row index
+        jal     get_rand_int
+        move    $a2, $a0, # get col index
+        addi    $a2, $a2, 1
+
+        jal     get_element
+        lb      $t0, 0($a3) #t0 = current element
+        bne     $t0, $zero, gen_index # square is filled
+
+        lw      $ra, 0($sp)
+        addi    $sp, $sp, 4
+        jr      $ra
+
+
+
 fun_get_mode:
     addi    $sp, $sp, -4
     sw      $ra, 0($sp)
@@ -128,13 +174,27 @@ fun_get_mode:
 
 
 
-get_element:
-        mul     $t0, $a1, 3 # index = row index * 3
-        add     $t0, $t0, $a2 # index += col index
+get_rand_int:
+    addi    $sp, $sp, -4
+    sw      $a1, 0($sp)
 
-        la      $a3, board
-        add     $a3, $a3, $t0
-        jr      $ra
+    addi    $a1, $zero, 3 # upper bound = 3
+    addi    $v0, $zero, 42 # generate rand int
+    syscall
+
+    lw      $a1, 0($sp)
+    addi    $sp, $sp, 4
+    jr 	    $ra
+
+
+
+get_element:
+    mul     $t0, $a1, 3 # index = row index * 3
+    add     $t0, $t0, $a2 # index += col index
+
+    la      $a3, board
+    add     $a3, $a3, $t0
+    jr      $ra
 
 
 
@@ -153,6 +213,10 @@ fun_display_board:
 
     la      $t0, board # board address
     li      $t1, 0 # curr index
+    
+    la	    $a0, newline
+    li      $v0, 4
+    syscall
 
     loop_board:
         addi    $t0, $t0, 1
