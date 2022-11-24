@@ -12,13 +12,15 @@ replacements: dict[str, str] = {}
 
 def add_to_replacements(line: str, startpos: int) -> None:
     tokens = line[startpos:].split()
-    assert len(tokens) == 2, tokens
-    replacements[tokens[0]] = tokens[1]
+    if len(tokens) != 2:
+        sys.stderr.write("Macro definition '{}' ill-formed\n".format(line.strip("\r\n")))
+        return
+    replacements[r"\b" + re.escape(tokens[0]) + r"\b"] = tokens[1].replace("\\", "\\\\")
 
 
 def replaced(s: str) -> str:
     for k, v in replacements.items():
-        s = s.replace(k, v)
+        s = re.sub(k, v, s)
     return s
 
 
@@ -30,5 +32,4 @@ for line in sys.stdin:
     if define_match:
         add_to_replacements(line, define_match.end())
     else:
-        line = replaced(line)
-        sys.stdout.write(line)
+        sys.stdout.write(replaced(line))
