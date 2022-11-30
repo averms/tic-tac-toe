@@ -39,9 +39,8 @@ fun_main:
     play_game:
         user1_move:
             jal     fun_get_user_input
-            la      $t0, player1
-            lb      $t0, 0($t0)
-            sb      $t0, 0($a3) # fill square
+            lbu     $t0, player1
+            sb      $t0, 0($v1) # fill square
 
             jal     fun_display_board
 
@@ -53,9 +52,8 @@ fun_main:
         
         user2_move:
             jal     fun_get_user_input
-            la      $t0, player2
-            lb      $t0, 0($t0)
-            sb      $t0, 0($a3) # fill square
+            lbu     $t0, player2
+            sb      $t0, 0($v1) # fill square
 
             jal     fun_display_board
 
@@ -66,9 +64,8 @@ fun_main:
 
         cpu_move:
             jal     fun_get_cpu_move
-            la      $t0, player2
-            lb      $t0, 0($t0)
-            sb      $t0, 0($a3) # fill square
+            lbu     $t0, player2
+            sb      $t0, 0($v1) # fill square
 
             jal     fun_display_board
 
@@ -92,8 +89,6 @@ fun_main:
         syscall
 
     j fun_init # restart game?
-    #la	$v0, 10
-    #syscall
 
 
 
@@ -118,7 +113,7 @@ fun_get_user_input:
 
         addi    $a1, $a1, -1
         jal     get_element
-        lb      $t0, 0($a3) # $t0 = current element
+        lb      $t0, 0($v1) # $t0 = current element
         bne     $t0, $zero, warn_user # square is filled
 
         lw      $ra, 0($sp)
@@ -145,7 +140,7 @@ fun_get_cpu_move:
         addi    $a2, $a2, 1
 
         jal     get_element
-        lb      $t0, 0($a3) #t0 = current element
+        lb      $t0, 0($v1) #t0 = current element
         bne     $t0, $zero, gen_index # square is filled
 
         lw      $ra, 0($sp)
@@ -192,8 +187,8 @@ get_element:
     mul     $t0, $a1, 3 # index = row index * 3
     add     $t0, $t0, $a2 # index += col index
 
-    la      $a3, board
-    add     $a3, $a3, $t0
+    la      $v1, board
+    add     $v1, $v1, $t0
     jr      $ra
 
 
