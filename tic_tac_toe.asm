@@ -31,8 +31,8 @@
 init:
     # Input:  void
     # Output: void, resets game
-    li 	$s0, 0 # reset playing mode
-    li 	$s1, 0 # reset player characters
+    li 	$s0, 0 		# reset playing mode
+    li 	$s1, 0 		# reset player characters
 
     # reset game board
     la      $t0, board
@@ -42,7 +42,7 @@ init_reset_board:
     addi    $t0, $t0, 1
     addi    $t1, $t1, 1
     blt     $t1, BOARD_SIZE, init_reset_board
-    j       main # begin game
+    j       main 	# begin game
 
 
 main:
@@ -63,7 +63,7 @@ pg_user1_move:
 
     jal     get_game_state
     bne     $v0, $zero, main_finish_game # game is done
-    beq     $s0, 1, pg_cpu_move
+    beq     $s0, 1, pg_cpu_move 	 # cpu move
 
 pg_user2_move:
     jal     get_user_input
@@ -73,8 +73,8 @@ pg_user2_move:
     jal     display_board
 
     jal     get_game_state
-    bne     $v0, $zero, main_finish_game
-    j       pg_user1_move
+    bne     $v0, $zero, main_finish_game # game is done
+    j       pg_user1_move 		 # player 1 move
 
 pg_cpu_move:
     jal     get_cpu_move
@@ -84,19 +84,19 @@ pg_cpu_move:
     jal     display_board
 
     jal     get_game_state
-    bne     $v0, $zero, main_finish_game
-    j       pg_user1_move
+    bne     $v0, $zero, main_finish_game # game is done
+    j       pg_user1_move		 # player 1 move
 
 main_finish_game:
-    beq     $v0, 2, fg_print_player2
-    beq     $v0, 3, fg_print_tie
+    beq     $v0, 2, fg_print_player2 # Congrat player 2
+    beq     $v0, 3, fg_print_tie     # Print tie
 
-    la      $a0, display_play1
+    la      $a0, display_play1	     # Congrat player 1
     j       fg_print_result
 
 fg_print_player2:
     beq     $s0, 2, fg_congrat_player2
-    la      $a0, display_cpu
+    la      $a0, display_cpu 	     
     j       fg_print_result
 
 fg_congrat_player2:
@@ -177,7 +177,7 @@ gui_get_col:
     addi    $a1, $a1, -1
     addi    $a2, $a2, -1
     jal     get_element
-    lb      $t0, 0($v0)
+    lb      $t0, 0($v0) # $t0 = current element
     bne     $t0, EMPTY, gui_warn_user # square is filled
 
     lw      $ra, 0($sp)
@@ -252,7 +252,7 @@ get_int:
 display_board:
     # Input:  void
     # Output: void, prints the board to console
-    li      $a0, '\n'
+    lb      $a0, line_feed
     li      $v0, 11
     syscall
 
@@ -264,7 +264,7 @@ db_for:
     beq     $t2, PLAYER1, db_play1
     beq     $t2, PLAYER2, db_play2
 
-    li      $a0, '_'
+    lb      $a0, underscore
     j       db_check_newline
 
 db_play1:
@@ -276,17 +276,17 @@ db_play2:
     j       db_X
 
 db_X:
-    li      $a0, 'X'
+    lb      $a0, X
     j       db_check_newline
 
 db_O:
-    li      $a0, 'O'
+    lb      $a0, O
 
 db_check_newline:
     li      $v0, 11
     syscall
 
-    li      $a0, ' '
+    lb      $a0, space
     li      $v0, 11
     syscall
 
@@ -295,7 +295,7 @@ db_check_newline:
     # Print line feed every row, when ($t1 + 1) mod 3 == 0
     bne     $t3, 0, db_for_next
 
-    li      $a0, '\n'
+    lb      $a0, line_feed
     li      $v0, 11
     syscall
     j       db_for_next
