@@ -34,8 +34,8 @@
 init:
     # Input:  void
     # Output: void, resets game
-    li 	$s0, 0 # reset playing mode
-    li 	$s1, 0 # reset player characters
+    li      $s0, 0 # reset playing mode
+    li      $s1, 0 # reset player characters
 
     la      $t0, board
     li      $t1, 0
@@ -276,7 +276,7 @@ display_board:
     # Output: void, prints the board to console
     addi    $sp, $sp, -4
     sw      $v0, 0($sp)
-    
+
     lb      $a0, line_feed
     li      $v0, 11
     syscall
