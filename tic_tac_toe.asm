@@ -1,6 +1,6 @@
 .data
-    prompt_mode:    .asciiz "\nPlay vs. 1 = CPU or 2 = User: (Enter 1 or 2) "
-    prompt_char:    .asciiz "Player 1 Character 1 = X or 2 = O: (Enter 1 or 2) "
+    prompt_mode:    .asciiz "\nPlay vs. 1 = CPU or 2 = User (Enter 1 or 2): "
+    prompt_char:    .asciiz "Player 1 Character 1 = X or 2 = O (Enter 1 or 2): "
     prompt_row:     .asciiz "Row (1-3) from top: "
     prompt_col:     .asciiz "Col (1-3) from left: "
     prompt_redo:    .asciiz "WARNING: Square occupied\n"
@@ -37,11 +37,10 @@ init:
     li 	$s0, 0 # reset playing mode
     li 	$s1, 0 # reset player characters
 
-    # reset game board
     la      $t0, board
     li      $t1, 0
 init_reset_board:
-    sb      $zero, 0($t0)
+    sb      $zero, 0($t0) # reset square 
     addi    $t0, $t0, 1
     addi    $t1, $t1, 1
     blt     $t1, BOARD_SIZE, init_reset_board
@@ -57,7 +56,6 @@ main:
 main_play_game:
 
 pg_user1_move:
-
     la      $a0, prompt_player1
     li      $v0, 4
     syscall
@@ -68,11 +66,10 @@ pg_user1_move:
     sb      $t0, 0($v0) # fill square
 
     jal     get_game_state
-    bne     $v0, $zero, main_finish_game # game is done
+    bne     $v0, $zero, main_finish_game
     beq     $s0, 1, pg_cpu_move
 
 pg_user2_move:
-
     la      $a0, prompt_player2
     li      $v0, 4
     syscall
@@ -87,7 +84,6 @@ pg_user2_move:
     j       pg_user1_move
 
 pg_cpu_move:
-
     la      $a0, display_CPU_turn
     li      $v0, 4
     syscall
@@ -177,24 +173,31 @@ get_user_input:
     sw      $ra, 0($sp)
 
 gui_get_row:
+    # ask user for row index
     la      $a0, prompt_row
     jal     get_int
     move    $a1, $v0
-    bgt     $a1, BOARD_ROW_SIZE, gui_get_row # check input
+    
+    # check input
+    bgt     $a1, BOARD_ROW_SIZE, gui_get_row
     blt     $a1, 1, gui_get_row
 
 gui_get_col:
+    # ask user for column index
     la      $a0, prompt_col
     jal     get_int
     move    $a2, $v0
-    bgt     $a2, BOARD_ROW_SIZE, gui_get_col # check input
+    
+    # check input
+    bgt     $a2, BOARD_ROW_SIZE, gui_get_col
     blt     $a2, 1, gui_get_col
     
+    # check if square is full
     addi    $a1, $a1, -1
     addi    $a2, $a2, -1
     jal     get_element
     lb      $t0, 0($v0)
-    bne     $t0, EMPTY, gui_warn_user # square is filled
+    bne     $t0, EMPTY, gui_warn_user
 
     lw      $ra, 0($sp)
     addi    $sp, $sp, 4
@@ -215,13 +218,14 @@ get_cpu_move:
 
 gcm_gen_index:
     jal     get_rand_int
-    move    $a1, $a0 # get row index
+    move    $a1, $a0 # generate row index
     jal     get_rand_int
-    move    $a2, $a0, # get col index
+    move    $a2, $a0, # generate column index
 
+    # check if square is full
     jal     get_element
-    lb      $t0, 0($v0) #t0 = current element
-    bne     $t0, EMPTY, gcm_gen_index # square is filled
+    lb      $t0, 0($v0)
+    bne     $t0, EMPTY, gcm_gen_index
 
     lw      $ra, 0($sp)
     addi    $sp, $sp, 4
@@ -234,8 +238,9 @@ get_rand_int:
     addi    $sp, $sp, -4
     sw      $a1, 0($sp)
 
-    addi    $a1, $zero, BOARD_ROW_SIZE # upper bound = 3
-    addi    $v0, $zero, 42 # generate rand int
+    # generate random int
+    addi    $a1, $zero, BOARD_ROW_SIZE # upper bound is 3
+    addi    $v0, $zero, 42 
     syscall
 
     lw      $a1, 0($sp)
@@ -247,8 +252,9 @@ get_element:
     # Input:  $a1 => row index
     #         $a2 => column index
     # Output: $v0 => board element address
-    mul     $t0, $a1, BOARD_ROW_SIZE # index = row index * 3
-    add     $t0, $t0, $a2 # index += col index
+    # square index = (row index * 3) + column index
+    mul     $t0, $a1, BOARD_ROW_SIZE
+    add     $t0, $t0, $a2
 
     la      $v0, board
     add     $v0, $v0, $t0
@@ -277,7 +283,6 @@ display_board:
 
     la 	    $t0, board
     li      $t1, 0
-   
 db_for:
     bge     $t1, BOARD_SIZE, db_end
     lb      $t2, 0($t0)
@@ -310,9 +315,9 @@ db_check_newline:
     li      $v0, 11
     syscall
 
+    # print line feed every row, when ($t1 + 1) mod 3 == 0
     add     $t3, $t1, 1
     rem     $t3, $t3, BOARD_ROW_SIZE
-    # Print line feed every row, when ($t1 + 1) mod 3 == 0
     bne     $t3, 0, db_for_next
 
     lb      $a0, line_feed
@@ -362,10 +367,10 @@ ggs_outer_for:
     li      $t1, 0
 
 ggs_inner_for:
+    # current row index = (index1 * 3) + index2
     la      $t6, board
     mul     $t7, $t0, BOARD_ROW_SIZE
     add     $t7, $t7, $t1
-
     add     $t6, $t6, $t7
     lb      $t7, 0($t6)
 
@@ -381,10 +386,10 @@ if_i_play2_row:
     addi    $t3, $t3, 1
 
 if_check_col:
+    # current column index = (index2 * 3) + index1
     la      $t6, board
     mul     $t7, $t1, BOARD_ROW_SIZE
     add     $t7, $t7, $t0
-
     add     $t6, $t6, $t7
     lb      $t7, 0($t6)
 
@@ -438,7 +443,7 @@ ggs_check_full:
 
 cf_for:
     bge     $t1, BOARD_SIZE, ggs_return_full
-    lb     	$t2, 0($t0)
+    lb      $t2, 0($t0)
     beq     $t2, EMPTY, ggs_return_empty
     addi    $t0, $t0, 1
     addi    $t1, $t1, 1
